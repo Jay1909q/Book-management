@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlueleafBook Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#2563eb', secondary: '#f0f9ff', dark: '#1e293b', lightBg: '#ffffff' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Book Image Background with Clean White & Light Blue Overlay */
+        .book-bg {
+            background: linear-gradient(rgba(255, 255, 255, 0.95), rgba(238, 246, 255, 0.95)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b67?auto=format&fit=crop&w=1600&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* Same-size blue action buttons */
+        .top-action-btn {
+            width: 96px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            border-radius: 12px;
+            background: #2563eb;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+            transition: all 0.2s ease;
+            border: 0;
+            cursor: pointer;
+        }
+        .top-action-btn:hover:not(:disabled) {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        .top-action-btn:disabled,
+        .disabled-action {
+            background: #2563eb;
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .dropdown-action {
+            margin: 4px 10px;
+            padding: 9px 12px;
+            border-radius: 9px;
+            background: #2563eb;
+            color: white;
+            font-weight: 700;
+            text-align: left;
+            transition: background 0.2s ease;
+        }
+        .dropdown-action:hover { background: #1d4ed8; }
+
+        @media (max-width: 700px) {
+            .top-action-btn { width: 96px; height: 38px; font-size: 12px; }
+            .menu-link, .menu-action { width: 150px; height: 38px; }
+        }
+        /* Simple menu items - same size, white background */
+        .menu-link, .menu-action {
+            width: 150px;
+            height: 38px;
+            min-height: 38px;
+            margin: 4px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 8px;
+            border-radius: 8px;
+            background: white;
+            color: #1e293b !important;
+            font-weight: 600;
+            font-size: 12px;
+            text-align: center;
+            text-decoration: none;
+            transition: background 0.2s ease;
+            border: 1px solid #e5e7eb;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .menu-link:hover, .menu-action:hover:not(:disabled) {
+            background: #f3f4f6;
+            color: #1e293b !important;
+            transform: none;
+        }
+
+        .menu-action:disabled {
+            background: #f3f4f6;
+            color: #9ca3af !important;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 520px) {
+            .top-action-btn { width: 72px; height: 36px; font-size: 10px; }
+        }
+    </style>
+</head>
+<body class="book-bg text-dark font-sans flex flex-col min-h-screen justify-between">
+
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-sm border-b border-blue-100 p-4">
+        <div class="container mx-auto flex justify-between items-center relative">
+            <a href="#home" onclick="navigateToSection(event, '#home')" class="text-xl font-black text-primary flex items-center gap-2">
+                📚 BlueLeaf Management
+            </a>
+
+            <!-- All navigation actions are inside the Menu -->
+            <div class="relative">
+                <button id="menuButton" onclick="toggleDropdown()"
+                        class="top-action-btn" aria-expanded="false" aria-controls="dropdownMenu">
+                    ☰ Menu
+                </button>
+
+                <!-- Menu Dropdown -->
+                <div id="dropdownMenu"
+                     class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-blue-100 py-2 z-50 flex flex-col items-center text-xs font-semibold">
+                    <a href="#home" onclick="navigateToSection(event, this.getAttribute('href'))" class="menu-link">🏠 Home</a>
+                    <a href="#login" onclick="navigateToSection(event, this.getAttribute('href'))" class="menu-link">🔐 Login</a>
+                    <a href="#define" onclick="navigateToSection(event, this.getAttribute('href'))" class="menu-link">📖 Define</a>
+                    <a href="#catalog" onclick="navigateToSection(event, this.getAttribute('href'))" class="menu-link">📚 Book Catalog & Archive</a>
+                    <a href="#cart" onclick="navigateToSection(event, this.getAttribute('href'))" class="menu-link">🛒 Cart</a>
+                    <a href="#report" onclick="navigateToSection(event, this.getAttribute('href'))" class="menu-link">📊 Report</a>
+                    <a href="#reviews" onclick="navigateToSection(event, this.getAttribute('href'))" class="menu-link">⭐ Reviews</a>
+                    <a href="#thanks" onclick="navigateToSection(event, this.getAttribute('href'))" class="menu-link">🎉 Thanks</a>
+
+                    <div class="border-t border-blue-100 my-2"></div>
+
+<!-- Logout button is inside the Menu dropdown -->
+                    <!-- Guest and Logout are inside Menu -->
+                    <button id="guestButton" onclick="guestMode()" class="menu-action">👤 Guest Mode</button>
+                    <button id="logoutButton" onclick="logoutUser()" class="menu-action disabled-action"
+                            title="Login first" aria-label="Logout" disabled>⏻ Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Layout (Vertical Scroll Sections) -->
+    <main class="container mx-auto px-4 py-8 flex-grow space-y-16">
+
+        <!-- 0. Home Page Landing -->
+        <section id="home" class="min-h-[70vh] flex flex-col items-center justify-center text-center">
+            <div class="max-w-xl bg-secondary p-8 rounded-2xl border border-blue-200 shadow-sm">
+                <span class="text-4xl mb-3 block">📖</span>
+                <h1 class="text-3xl font-black mb-3 text-primary">Welcome to BlueLeaf</h1>
+                <p class="text-sm text-gray-700 leading-relaxed mb-6">Your ultimate digital destination for exploring, ordering, and tracking academic books, references, novels, and spiritual scriptures effortlessly.</p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <a href="#login" onclick="navigateToSection(event, '#login')" class="bg-primary text-white font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-blue-700 transition shadow">Get Started</a>
+                    <a href="#catalog" onclick="navigateToSection(event, '#catalog')" class="bg-white text-primary border border-primary font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition shadow">Explore Books</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 1. Login Form -->
+        <section id="login" class="min-h-[70vh] flex flex-col items-center justify-center text-center">
+            <div class="w-full max-w-md bg-secondary p-8 rounded-2xl shadow-md border border-blue-200">
+                <h2 class="text-2xl font-black text-primary mb-2">Student Portal Login</h2>
+                <p class="text-xs text-gray-600 mb-6">Access your dashboard & secure checkout</p>
+                <form onsubmit="handleLogin(event)">
+                    <input id="studentId" type="text" placeholder="Student ID or Email" required autocomplete="username" class="w-full p-3 mb-4 bg-white border border-blue-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary text-dark">
+                    <input id="studentPassword" type="password" placeholder="Password" required autocomplete="current-password" class="w-full p-3 mb-6 bg-white border border-blue-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary text-dark">
+                    <button type="submit" class="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition shadow">
+                        Login & Continue
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 2. Sweet Define -->
+        <section id="define" class="min-h-[70vh] flex flex-col items-center justify-center text-center">
+            <div class="max-w-xl bg-secondary p-8 rounded-2xl border border-blue-200 shadow-sm">
+                <h2 class="text-3xl font-black mb-4 text-primary">What is Book Management?</h2>
+                <p class="text-sm text-gray-700 leading-relaxed">The structured digital system of cataloging, organizing, preserving, and efficiently distributing literature, academic texts, and reference archives.</p>
+            </div>
+        </section>
+
+        <!-- 3 & 4 & 5. Merged Professional Book Catalog & Archive Showcase -->
+        <section id="catalog" class="min-h-[70vh] flex flex-col items-center justify-center">
+            <div class="max-w-4xl w-full bg-secondary p-8 rounded-3xl border border-blue-200 shadow-xl text-center">
+                <span class="text-3xl mb-2 block">📚</span>
+                <h2 class="text-2xl font-black mb-2 text-primary">Book Catalog & Archive Showcase</h2>
+                <p class="text-xs text-gray-600 mb-6">Browse through our academic manuals, fiction, references, and spiritual scriptures</p>
+                
+                <!-- Manual slider container with navigation buttons -->
+                <div class="relative overflow-hidden rounded-2xl bg-white p-4 shadow-inner border border-blue-100">
+                    <div id="sliderTrack" class="flex transition-transform duration-300 ease-in-out">
+                        
+                        <!-- Slide 1: Academic & Reference -->
+                        <div class="min-w-full grid grid-cols-1 md:grid-cols-3 gap-4 p-2">
+                            <!-- Card 1 -->
+                            <div class="bg-secondary p-3 rounded-xl text-left border border-blue-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80" class="w-full h-28 object-cover rounded-lg mb-2">
+                                    <h4 class="font-bold text-xs text-dark">Academic Texts</h4>
+                                    <p class="text-[11px] text-primary font-medium">Author: Dr. Robert Sterling</p>
+                                    <p class="text-[11px] text-gray-600 mt-1 line-clamp-2">Comprehensive guide covering advanced core concepts and structured curriculum details for higher studies.</p>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-blue-100 flex items-center justify-between">
+                                    <span class="text-xs font-black text-primary">₹650</span>
+                                    <button onclick="addToCart('Academic Texts', 650)" class="bg-primary text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Add</button>
+                                </div>
+                            </div>
+                            <!-- Card 2 -->
+                            <div class="bg-secondary p-3 rounded-xl text-left border border-blue-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=300&q=80" class="w-full h-28 object-cover rounded-lg mb-2">
+                                    <h4 class="font-bold text-xs text-dark">Reference Manuals</h4>
+                                    <p class="text-[11px] text-primary font-medium">Author: Prof. Elizabeth Holt</p>
+                                    <p class="text-[11px] text-gray-600 mt-1 line-clamp-2">Detailed industry-standard references designed to help professionals and researchers navigate complex projects.</p>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-blue-100 flex items-center justify-between">
+                                    <span class="text-xs font-black text-primary">₹850</span>
+                                    <button onclick="addToCart('Reference Manuals', 850)" class="bg-primary text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Add</button>
+                                </div>
+                            </div>
+                            <!-- Card 3 -->
+                            <div class="bg-secondary p-3 rounded-xl text-left border border-blue-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=300&q=80" class="w-full h-28 object-cover rounded-lg mb-2">
+                                    <h4 class="font-bold text-xs text-dark">Fictional Novels</h4>
+                                    <p class="text-[11px] text-primary font-medium">Author: Jonathan Vance</p>
+                                    <p class="text-[11px] text-gray-600 mt-1 line-clamp-2">Engaging literary masterpiece that transports readers through imaginative worlds and unforgettable storytelling.</p>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-blue-100 flex items-center justify-between">
+                                    <span class="text-xs font-black text-primary">₹450</span>
+                                    <button onclick="addToCart('Fictional Novels', 450)" class="bg-primary text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Add</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slide 2: Reference & Novel Archive -->
+                        <div class="min-w-full grid grid-cols-1 md:grid-cols-3 gap-4 p-2">
+                            <!-- Card 4 -->
+                            <div class="bg-secondary p-3 rounded-xl text-left border border-blue-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=250&q=80" class="w-full h-28 object-cover rounded-lg mb-2">
+                                    <h4 class="font-bold text-xs text-dark">The Novel</h4>
+                                    <p class="text-[11px] text-primary font-medium">Author: Clara Montgomery</p>
+                                    <p class="text-[11px] text-gray-600 mt-1 line-clamp-2">A captivating drama exploring deep human connections, mystery, and personal transformation over time.</p>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-blue-100 flex items-center justify-between">
+                                    <span class="text-xs font-black text-primary">₹400</span>
+                                    <button onclick="addToCart('The Novel', 400)" class="bg-primary text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Add</button>
+                                </div>
+                            </div>
+                            <!-- Card 5 -->
+                            <div class="bg-secondary p-3 rounded-xl text-left border border-blue-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=250&q=80" class="w-full h-28 object-cover rounded-lg mb-2">
+                                    <h4 class="font-bold text-xs text-dark">Reference Guide</h4>
+                                    <p class="text-[11px] text-primary font-medium">Author: Marcus Aurelius Jr.</p>
+                                    <p class="text-[11px] text-gray-600 mt-1 line-clamp-2">Essential handbook loaded with quick tips, formulas, and methodologies for everyday professional problem solving.</p>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-blue-100 flex items-center justify-between">
+                                    <span class="text-xs font-black text-primary">₹550</span>
+                                    <button onclick="addToCart('Reference Guide', 550)" class="bg-primary text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Add</button>
+                                </div>
+                            </div>
+                            <!-- Card 6 -->
+                            <div class="bg-secondary p-3 rounded-xl text-left border border-blue-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=250&q=80" class="w-full h-28 object-cover rounded-lg mb-2">
+                                    <h4 class="font-bold text-xs text-dark">Business Compendium</h4>
+                                    <p class="text-[11px] text-primary font-medium">Author: Sophia Chen</p>
+                                    <p class="text-[11px] text-gray-600 mt-1 line-clamp-2">Strategic insights into modern corporate leadership, financial management, and sustainable market scaling.</p>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-blue-100 flex items-center justify-between">
+                                    <span class="text-xs font-black text-primary">₹950</span>
+                                    <button onclick="addToCart('Business Compendium', 950)" class="bg-primary text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Add</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slide 3: Religious & Spiritual Books -->
+                        <div class="min-w-full grid grid-cols-1 md:grid-cols-3 gap-4 p-2">
+                            <!-- Card 7 -->
+                            <div class="bg-secondary p-3 rounded-xl text-left border border-blue-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=250&q=80" class="w-full h-28 object-cover rounded-lg mb-2">
+                                    <h4 class="font-bold text-xs text-dark">Sacred Epics</h4>
+                                    <p class="text-[11px] text-primary font-medium">Author: Ancient Tradition</p>
+                                    <p class="text-[11px] text-gray-600 mt-1 line-clamp-2">Timeless chronicles of moral duty, divine intervention, and ethical triumphs passed through generations.</p>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-blue-100 flex items-center justify-between">
+                                    <span class="text-xs font-black text-primary">₹550</span>
+                                    <button onclick="addToCart('Sacred Epics', 550)" class="bg-primary text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Add</button>
+                                </div>
+                            </div>
+                            <!-- Card 8 -->
+                            <div class="bg-secondary p-3 rounded-xl text-left border border-blue-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <img src="https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=250&q=80" class="w-full h-28 object-cover rounded-lg mb-2">
+                                    <h4 class="font-bold text-xs text-dark">Spiritual Discourses</h4>
+                                    <p class="text-[11px] text-primary font-medium">Author: Swami Anand</p>
+                                    <p class="text-[11px] text-gray-600 mt-1 line-clamp-2">Profound teachings on inner peace, meditation techniques, and balancing modern daily life with spirituality.</p>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-blue-100 flex items-center justify-between">
+                                    <span class="text-xs font-black text-primary">₹480</span>
+                                    <button onclick="addToCart('Spiritual Discourses', 480)" class="bg-primary text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Add</button>
+                                </div>
+                            </div>
+                            <!-- Card 9 -->
+                            <div class="bg-secondary p-3 rounded-xl text-left border border-blue-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=250&q=80" class="w-full h-28 object-cover rounded-lg mb-2">
+                                    <h4 class="font-bold text-xs text-dark">Philosophy & Ethics</h4>
+                                    <p class="text-[11px] text-primary font-medium">Author: Dr. Arthur Pendelton</p>
+                                    <p class="text-[11px] text-gray-600 mt-1 line-clamp-2">An exploration into foundational human questions, moral reasoning, and existential thought structures.</p>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-blue-100 flex items-center justify-between">
+                                    <span class="text-xs font-black text-primary">₹600</span>
+                                    <button onclick="addToCart('Philosophy & Ethics', 600)" class="bg-primary text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Add</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Slider Controls (Previous / Next Buttons) -->
+                <div class="flex justify-center items-center gap-4 mt-4">
+                    <button onclick="prevSlide()" class="bg-primary text-white px-4 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-700 transition shadow">❮ Prev</button>
+                    <span id="slideIndicator" class="text-xs font-semibold text-gray-600">1 / 3</span>
+                    <button onclick="nextSlide()" class="bg-primary text-white px-4 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-700 transition shadow">Next ❯</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Order or Cart System -->
+        <section id="cart" class="min-h-[70vh] flex flex-col items-center justify-center">
+            <div class="max-w-md w-full bg-secondary p-8 rounded-2xl border border-blue-200 shadow-xl">
+                <h2 class="text-2xl font-black mb-6 text-center text-primary">Order / Cart System</h2>
+                <div id="cartItemsContainer" class="space-y-3 mb-6 text-sm">
+                    <p id="emptyCartText" class="text-center text-gray-500 text-xs py-4">Your cart is currently empty.</p>
+                </div>
+                <div class="border-t border-blue-200 pt-4 flex justify-between items-center text-sm font-bold text-dark mb-6">
+                    <span>Total Amount:</span>
+                    <span id="total-price" class="text-primary text-lg">₹0</span>
+                </div>
+
+                <!-- Integrated Payment Options inside Cart -->
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-dark mb-2">Select Payment Method:</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="flex flex-col items-center justify-center p-2 bg-white border border-blue-200 rounded-xl cursor-pointer hover:border-primary transition text-center">
+                            <input type="radio" name="paymentMethod" value="Paytm" class="mb-1 text-primary focus:ring-primary" checked>
+                            <span class="text-[11px] font-bold text-dark">Paytm</span>
+                        </label>
+                        <label class="flex flex-col items-center justify-center p-2 bg-white border border-blue-200 rounded-xl cursor-pointer hover:border-primary transition text-center">
+                            <input type="radio" name="paymentMethod" value="Google Pay" class="mb-1 text-primary focus:ring-primary">
+                            <span class="text-[11px] font-bold text-dark">Google Pay</span>
+                        </label>
+                        <label class="flex flex-col items-center justify-center p-2 bg-white border border-blue-200 rounded-xl cursor-pointer hover:border-primary transition text-center">
+                            <input type="radio" name="paymentMethod" value="PhonePe" class="mb-1 text-primary focus:ring-primary">
+                            <span class="text-[11px] font-bold text-dark">PhonePe</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button onclick="checkoutCart()" class="w-full text-center bg-primary text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition shadow">Proceed to Pay & Checkout</button>
+            </div>
+        </section>
+
+        <!-- 7. Last Buyer Report -->
+        <section id="report" class="min-h-[70vh] flex flex-col items-center justify-center text-center">
+            <div class="max-w-2xl w-full bg-secondary p-8 rounded-2xl border border-blue-200 shadow-sm">
+                <h2 class="text-2xl font-black mb-6 text-primary">Last Buyer Report</h2>
+                <div class="grid md:grid-cols-3 gap-4 text-sm w-full mb-4">
+                    <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                        <p class="text-gray-500">Total Books Sold</p>
+                        <p class="text-2xl font-bold text-primary mt-1">1,428</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                        <p class="text-gray-500">Active Members</p>
+                        <p class="text-2xl font-bold text-primary mt-1">840</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                        <p class="text-gray-500">Top Category</p>
+                        <p class="text-lg font-bold text-primary mt-1">Religious & Academic</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-600 italic">"Batch #402 dispatched successfully to local campus library."</p>
+            </div>
+        </section>
+
+        <!-- 8. Students Review -->
+        <section id="reviews" class="min-h-[70vh] flex flex-col items-center justify-center">
+            <h2 class="text-2xl font-black mb-6 text-center text-primary">Students Review</h2>
+            <div class="grid md:grid-cols-2 gap-4 text-sm max-w-2xl w-full">
+                <div class="bg-secondary p-4 rounded-xl border border-blue-200 shadow-sm">
+                    <p class="text-yellow-500 mb-1">★★★★★</p>
+                    <p class="text-gray-700 italic">"The digital library makes referencing books so seamless for my exams."</p>
+                    <p class="font-bold mt-2 text-xs text-primary">— Rahul V.</p>
+                </div>
+                <div class="bg-secondary p-4 rounded-xl border border-blue-200 shadow-sm">
+                    <p class="text-yellow-500 mb-1">★★★★★</p>
+                    <p class="text-gray-700 italic">"Amazing catalog, especially the collection of spiritual and religious reads."</p>
+                    <p class="font-bold mt-2 text-xs text-primary">— Priya S.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. Thank You Page -->
+        <section id="thanks" class="min-h-[70vh] flex flex-col items-center justify-center text-center">
+            <div class="max-w-md bg-secondary p-8 rounded-2xl border border-blue-200 shadow-xl w-full">
+                <div class="text-5xl mb-3">🎉</div>
+                <h2 class="text-3xl font-black mb-2 text-primary">Thank You!</h2>
+                <p class="text-sm text-gray-700 mb-6">Your order has been successfully processed and placed. Happy Reading!</p>
+                <a href="#home" onclick="navigateToSection(event, '#home')" class="inline-block bg-primary px-6 py-2 rounded-xl text-sm font-bold text-white hover:bg-blue-700 transition shadow">Back to Home</a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white/95 backdrop-blur text-gray-600 text-center py-7 text-xs mt-12 border-t border-blue-100">
+        <p class="font-semibold mb-3">&copy; 2026 BlueLeaf Book Management System</p>
+        <div class="flex justify-center items-center gap-3 mb-2">
+            <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook"
+               class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-base font-bold hover:bg-blue-700 transition">f</a>
+            <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+               class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-base font-bold hover:bg-blue-700 transition">◎</a>
+            <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
+               class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-base font-bold hover:bg-blue-700 transition">in</a>
+            <a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube"
+               class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-base font-bold hover:bg-blue-700 transition">▶</a>
+            <a href="https://x.com/" target="_blank" rel="noopener noreferrer" aria-label="X"
+               class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-base font-bold hover:bg-blue-700 transition">𝕏</a>
+        </div>
+        <p class="text-[10px] text-gray-500">Follow BlueLeaf on social media</p>
+    </footer>
+
+    <!-- Simple Popup Modal -->
+    <div id="modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl max-w-xs w-full text-center shadow-xl border border-blue-100">
+            <p id="modal-text" class="text-sm font-bold mb-4 text-dark"></p>
+            <button onclick="closeModalAndAddToCart()" class="bg-primary text-white text-xs px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition">Close</button>
+        </div>
+    </div>
+
+    <!-- JavaScript for Dynamic Cart & Slider -->
+    <script>
+        // =========================
+        // LOGIN / LOGOUT SYSTEM
+        // =========================
+        function updateAuthButton() {
+            const logoutButton = document.getElementById('logoutButton');
+            if (!logoutButton) return;
+
+            const loggedIn = localStorage.getItem('blueleafLoggedIn') === 'true';
+
+            const guestButton = document.getElementById('guestButton');
+            const isGuest = localStorage.getItem('blueleafGuest') === 'true';
+
+            if (loggedIn) {
+                logoutButton.disabled = false;
+                logoutButton.title = isGuest ? 'Exit Guest Mode' : 'Logout';
+                logoutButton.setAttribute('aria-label', isGuest ? 'Exit Guest Mode' : 'Logout');
+                if (isGuest) {
+                    guestButton.textContent = '✓ Guest Mode Active';
+                } else {
+                    guestButton.textContent = '👤 Guest Mode';
+                }
+            } else {
+                logoutButton.disabled = true;
+                logoutButton.title = 'Login first';
+                logoutButton.setAttribute('aria-label', 'Logout disabled - login first');
+                guestButton.textContent = '👤 Guest Mode';
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const studentId = document.getElementById('studentId').value.trim();
+            const password = document.getElementById('studentPassword').value.trim();
+
+            if (studentId === '' || password === '') {
+                showMsg('Please enter Student ID/Email and Password.');
+                return;
+            }
+
+            // Store login session.
+            localStorage.setItem('blueleafLoggedIn', 'true');
+            localStorage.setItem('blueleafStudent', studentId);
+            localStorage.removeItem('blueleafGuest');
+
+            updateAuthButton();
+            closeDropdown();
+
+            // No popup notification after successful login.
+
+            // Automatically scroll to the next section.
+            setTimeout(() => {
+                document.getElementById('define').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 300);
+        }
+
+        function guestMode() {
+            localStorage.setItem('blueleafLoggedIn', 'true');
+            localStorage.setItem('blueleafStudent', 'Guest');
+            localStorage.setItem('blueleafGuest', 'true');
+            updateAuthButton();
+            closeDropdown();
+
+            setTimeout(() => {
+                const defineSection = document.getElementById('define');
+                if (defineSection) {
+                    defineSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 200);
+        }
+
+        function logoutUser() {
+            const loggedIn = localStorage.getItem('blueleafLoggedIn') === 'true';
+
+            if (!loggedIn) {
+                showMsg('Please login first.');
+                return;
+            }
+
+            // Remove login session.
+            localStorage.removeItem('blueleafLoggedIn');
+            localStorage.removeItem('blueleafStudent');
+            localStorage.removeItem('blueleafGuest');
+
+            // Clear cart on logout.
+            cart = {};
+            pendingBook = null;
+
+            if (typeof updateCartUI === 'function') {
+                updateCartUI();
+            }
+
+            updateAuthButton();
+            closeDropdown();
+
+            showMsg('Logout Successful! You have been logged out.');
+
+            // Go back to Login after logout.
+            setTimeout(() => {
+                document.getElementById('login').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 700);
+        }
+
+        function checkLoginState() {
+            updateAuthButton();
+        }
+
+        // =========================
+        // MENU DROPDOWN
+        // =========================
+        function toggleDropdown() {
+            const menu = document.getElementById('dropdownMenu');
+            const isHidden = menu.classList.toggle('hidden');
+            const button = document.getElementById('menuButton');
+            if (button) button.setAttribute('aria-expanded', String(!isHidden));
+        }
+
+        function closeDropdown() {
+            const menu = document.getElementById('dropdownMenu');
+            if (menu) menu.classList.add('hidden');
+            const button = document.getElementById('menuButton');
+            if (button) button.setAttribute('aria-expanded', 'false');
+        }
+
+        function navigateToSection(event, target) {
+            event.preventDefault();
+            closeDropdown();
+
+            if (!target || !target.startsWith('#')) return;
+
+            const section = document.querySelector(target);
+            if (section) {
+                section.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                history.replaceState(null, '', target);
+            }
+        }
+
+        window.addEventListener('click', function(e) {
+            const menu = document.getElementById('dropdownMenu');
+            const menuButton = document.getElementById('menuButton');
+
+            if (menu && menuButton &&
+                !menu.contains(e.target) &&
+                !menuButton.contains(e.target)) {
+                menu.classList.add('hidden');
+                menuButton.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', checkLoginState);
+
+        // Manual Slider Logic
+        let currentSlide = 0;
+        const totalSlides = 3;
+        const sliderTrack = document.getElementById('sliderTrack');
+        const slideIndicator = document.getElementById('slideIndicator');
+
+        function updateSlider() {
+            if (sliderTrack) {
+                sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+            }
+            if (slideIndicator) {
+                slideIndicator.innerText = `${currentSlide + 1} / ${totalSlides}`;
+            }
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            updateSlider();
+        }
+
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+            updateSlider();
+        }
+
+        // Popup Notification Helper
+        function showMsg(text) {
+            document.getElementById('modal-text').innerText = text;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        // Dynamic Cart System
+        let cart = {};
+        let pendingBook = null;
+
+        function addToCart(bookName, price) {
+            const loggedIn = localStorage.getItem('blueleafLoggedIn') === 'true';
+
+            if (!loggedIn) {
+                showMsg('Please Login or choose Guest Mode before adding books.');
+                setTimeout(() => {
+                    document.getElementById('login').scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 900);
+                return;
+            }
+
+            pendingBook = { name: bookName, price: price };
+            showMsg(`"${bookName}" added to cart!`);
+        }
+
+        function closeModalAndAddToCart() {
+            if (pendingBook) {
+                let bookName = pendingBook.name;
+                let price = pendingBook.price;
+                if (cart[bookName]) {
+                    cart[bookName].qty += 1;
+                } else {
+                    cart[bookName] = { price: price, qty: 1 };
+                }
+                updateCartUI();
+                pendingBook = null;
+            }
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        function changeQtyByName(bookName, delta) {
+            if (cart[bookName]) {
+                cart[bookName].qty += delta;
+                if (cart[bookName].qty <= 0) {
+                    delete cart[bookName];
+                }
+                updateCartUI();
+            }
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cartItemsContainer');
+            const totalPriceElement = document.getElementById('total-price');
+
+            container.innerHTML = '';
+            let keys = Object.keys(cart);
+
+            if (keys.length === 0) {
+                container.innerHTML = `<p id="emptyCartText" class="text-center text-gray-500 text-xs py-4">Your cart is currently empty.</p>`;
+                totalPriceElement.innerText = '₹0';
+                return;
+            }
+
+            let grandTotal = 0;
+
+            keys.forEach(bookName => {
+                let item = cart[bookName];
+                let itemTotal = item.price * item.qty;
+                grandTotal += itemTotal;
+
+                let row = document.createElement('div');
+                row.className = 'flex items-center justify-between p-3 bg-secondary rounded-xl border border-blue-200';
+                row.innerHTML = `
+                    <div><b class="text-dark">${bookName}</b> (₹${item.price})</div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="changeQtyByName('${bookName}', -1)" class="w-8 h-8 bg-red-500 text-white rounded-full font-bold shadow">-</button>
+                        <span class="font-bold w-4 text-center text-dark">${item.qty}</span>
+                        <button onclick="changeQtyByName('${bookName}', 1)" class="w-8 h-8 bg-primary text-white rounded-full font-bold shadow">+</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            totalPriceElement.innerText = `₹${grandTotal}`;
+        }
+
+        function checkoutCart() {
+            if (Object.keys(cart).length === 0) {
+                showMsg('Your cart is empty! Please add items before checkout.');
+                return;
+            }
+            const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            showMsg(`Order placed successfully via ${selectedMethod}!`);
+            cart = {};
+            updateCartUI();
+            setTimeout(() => {
+                location.href = '#thanks';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
